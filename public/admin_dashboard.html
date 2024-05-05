@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the Admin Dashboard</h1>
+        <p>Here you can manage the application and access admin-specific features.</p>
+
+        <!-- User List Table -->
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="userTable">
+                    <!-- User data will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Update User Form -->
+        <h2>Update User</h2>
+        <form id="updateUserForm">
+            <input type="hidden" id="updateUserId" name="userId">
+            <div class="form-group">
+                <label for="updateUsername">Username</label>
+                <input type="text" class="form-control" id="updateUsername" name="username">
+            </div>
+            <div class="form-group">
+                <label for="updateRole">Role</label>
+                <select class="form-control" id="updateRole" name="role">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Update User</button>
+        </form>
+
+        <!-- Delete User Button -->
+        <h2>Delete User</h2>
+        <button id="deleteUserBtn" class="btn btn-danger">Delete Selected User</button>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+         function loadUsers() {
+            $.ajax({
+                url: '/fetch-users',
+                type: 'GET',
+                success: function(users) {
+                    const userTable = $('#userTable');
+                    userTable.empty();
+        
+                    users.forEach(user => {
+                        userTable.append(`
+                            <tr>
+                                <td>${user.username}</td>
+                                <td>${user.role}</td>
+                                <td>
+                                    <button class="btn btn-warning btn-sm updateUserBtn" data-id="${user.id}">Update</button>
+                                    <button class="btn btn-danger btn-sm deleteUserBtn" data-id="${user.id}">Delete</button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                },
+                error: function(error) {
+                    console.error('Error fetching users:', error);
+                    alert('Failed to load users. Please try again later.');
+                }
+            });
+        }
+        $(document).ready(function() {
+            // Load users into the table
+            function loadUsers() {
+                $.ajax({
+                    url: '/fetch-users',
+                    type: 'GET',
+                    success: function(users) {
+                        const userTable = $('#userTable');
+                        userTable.empty();
+        
+                        users.forEach(user => {
+                            userTable.append(`
+                                <tr>
+                                    <td>${user.username}</td>
+                                    <td>${user.role}</td>
+                                    <td>
+                                        <button class="btn btn-warning btn-sm updateUserBtn" data-id="${user.id}">Update</button>
+                                        <button class="btn btn-danger btn-sm deleteUserBtn" data-id="${user.id}">Delete</button>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                    },
+                    error: function(error) {
+                        console.error('Error fetching users:', error);
+                        alert('Failed to load users. Please try again later.');
+                    }
+                });
+            }
+        
+            // Call the loadUsers function to populate the table
+            loadUsers();
+        
+            // Event delegation for dynamically created buttons
+            $('#userTable').on('click', '.updateUserBtn', function() {
+                const userId = $(this).data('id');
+                // Populate the update form with user data
+                $('#updateUserId').val(userId);
+                // Ideally, fetch user data from the server and populate the form
+                // For demonstration, static values are used
+                $('#updateUsername').val('user1'); // Example value
+                $('#updateRole').val('user'); // Example value
+            });
+        
+            $('#userTable').on('click', '.deleteUserBtn', function() {
+                const userId = $(this).data('id');
+                deleteUser(userId);
+            });
+        
+            // Update user form submission
+            $('#updateUserForm').on('submit', function(e) {
+                e.preventDefault(); // Prevent the default form submission
+                updateUser(); // Call the updateUser function
+            });
+        });
+        
+        // Define the updateUser function
+        function updateUser() {
+    const userId = $('#updateUserId').val();
+    const username = $('#updateUsername').val();
+    const role = $('#updateRole').val();
+
+    $.ajax({
+        url: '/update-user',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ userId: userId, username: username, role: role }),
+        success: function(response) {
+            console.log(response);
+            loadUsers();
+            $('#updateUserForm')[0].reset();
+            alert('User updated successfully.');
+        },
+        error: function(error) {
+            console.error('Error updating user:', error);
+            alert('Failed to update user. Please try again.');
+        }
+    });
+}
+
+        $('#loginForm').on('submit', function(e) {
+    e.preventDefault();
+    const username = $('#loginUsername').val();
+    const password = $('#loginPassword').val();
+    $.ajax({
+        url: '/login',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ username, password }),
+        success: function(response) {
+            if (response.code === 200) {
+                alert('Login successful');
+                // Redirect based on user role
+                if (response.role === 'admin') {
+                    window.location.href = "admin_dashboard.html"; // Redirect to admin dashboard
+                } else {
+                    window.location.href = "user_dashboard.html"; // Redirect to user dashboard
+                }
+            } else {
+                // Display the error message based on the response
+                alert('Error: ' + response.error);
+            }
+        },
+        error: function(error) {
+            // Handle server errors
+            if (error.responseJSON) {
+                alert('Error: ' + error.responseJSON.error);
+            } else {
+                alert('An error occurred. Please try again.');
+            }
+        }
+    });
+});
+
+        
+        // Define the deleteUser function
+        function deleteUser(userId) {
+    $.ajax({
+        url: '/delete-user',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ userId: userId }),
+        success: function(response) {
+            console.log(response);
+            loadUsers();
+            alert('User deleted successfully.');
+        },
+        error: function(error) {
+            console.error('Error deleting user:', error);
+            alert('Failed to delete user. Please try again.');
+        }
+    });
+}
+
+    </script>
+        
+</body>
+</html>
+

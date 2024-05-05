@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Registration and Login</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>User Registration and Login</h1>
+    <div class="forms-container">
+    <div id="registrationForm">
+        <h2>Register</h2>
+        <form id="registerForm">
+            <label for="registerUsername">Username:</label>
+            <input type="text" id="registerUsername" name="username" required>
+            <br>
+            <label for="registerPassword">Password:</label>
+            <input type="password" id="registerPassword" name="password" required>
+            <br>
+            <label for="registerRole">Role:</label>
+            <select id="registerRole" name="role">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+            </select>
+            <br>
+            <button type="submit">Register</button>
+        </form>
+    </div>
+    
+    <div id="loginForm">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <label for="loginUsername">Username:</label>
+            <input type="text" id="loginUsername" name="username" required>
+            <br>
+            <label for="loginPassword">Password:</label>
+            <input type="password" id="loginPassword" name="password" required>
+            <br>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+    </div>
+    <script>
+      $(document).ready(function() {
+    $('#registerForm').on('submit', function(e) {
+        e.preventDefault();
+        const username = $('#registerUsername').val();
+        const password = $('#registerPassword').val();
+        const role = $('#registerRole').val(); // Get the selected role
+        $.ajax({
+            url: '/register',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ username, password, role }), // Include the role in the data
+            success: function(response) {
+                alert(response.success);
+            },
+            error: function(error) {
+                alert('Error: ' + error.responseJSON.error);
+            }
+        });
+    });
+});
+
+    $('#loginForm').on('submit', function(e) {
+    e.preventDefault();
+    const username = $('#loginUsername').val();
+    const password = $('#loginPassword').val();
+    $.ajax({
+        url: '/login',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ username, password }),
+        success: function(response) {
+            if (response.code === 200) {
+                alert('Login successful');
+                // Redirect based on user role
+                if (response.role === 'admin') {
+                    window.location.href = "admin_dashboard.html"; // Redirect to admin dashboard
+                } else {
+                    window.location.href = "user_dashboard.html"; // Redirect to user dashboard
+                }
+            } else {
+                alert('Error: ' + response.error);
+            }
+        },
+        error: function(error) {
+            alert('Error: ' + error.responseJSON.error);
+        }
+    });
+});
+</script>
+</body>
+</html>
